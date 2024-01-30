@@ -5,6 +5,9 @@ const cors = require('cors');
 const morgan = require('morgan');
 const controller = require('./controller')
 
+// this is chatting server of next company-influencer matching project.
+
+
 const app = express();
 app.use(cors());
 app.use(morgan('dev'))

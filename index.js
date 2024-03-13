@@ -11,10 +11,11 @@ app.use(morgan('dev'))
 const server = http.createServer(app);
 
 const io = require('socket.io').listen(server)
+const userChatNamespace = io.of('/user-chat');
 
-io.on('connection', (socket) => {
+userChatNamespace.on('connection', (socket) => {
     socket.on('message', (data) => {
-        controller(io, data);
+        controller(userChatNamespace, data);
     });
     socket.on('info', (data) => {
         socket.join(data.roomId);

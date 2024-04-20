@@ -17,6 +17,7 @@ module.exports = (io, data) => {
     };
     request(options)
         .then((response) => {
+            console.log(response);
             io.to(data.roomId).emit('message'); // Broadcast the message to all connected clients
         })
         .catch((error) => {

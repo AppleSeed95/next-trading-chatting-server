@@ -15,13 +15,13 @@ module.exports = (io, data) => {
         },
         json: true, // Set to true if you want to send JSON data in the request body
     };
-    console.log('request');
     request(options)
         .then((response) => {
             console.log(response);
             io.to(data.roomId).emit('message'); // Broadcast the message to all connected clients
         })
         .catch((error) => {
+            console.log(error);
             io.to(data.roomId).emit('message'); // Broadcast the message to all connected clients
         });
 }

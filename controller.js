@@ -15,6 +15,7 @@ module.exports = (io, data) => {
         },
         json: true, // Set to true if you want to send JSON data in the request body
     };
+    console.log('request');
     request(options)
         .then((response) => {
             console.log(response);

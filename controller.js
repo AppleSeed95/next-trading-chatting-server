@@ -1,7 +1,7 @@
 // const rp = require("request-promise")
 const request = require("request-promise");
 const config = require('./config')
-module.exports = (io, data) => {
+exports.messageCtr = (io, data) => {
     const { roomId, userId, msg } = data;
     const today = new Date();
     const day = `${today.getFullYear()}/${today.getMonth() + 1
@@ -22,4 +22,7 @@ module.exports = (io, data) => {
         .catch((error) => {
             io.to(data.roomId).emit('message'); // Broadcast the message to all connected clients
         });
+}
+exports.reloadCtr = (io, data) => {
+    io.to(data.roomId).emit('requireReload', { data }); // Broadcast the message to all connected clients
 }

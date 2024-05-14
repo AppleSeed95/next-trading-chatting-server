@@ -3,7 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const morgan = require('morgan');
-const controller = require('./controller')
+const { messageCtr, reloadCtr } = require('./controller')
 
 const app = express();
 app.use(cors());
@@ -14,10 +14,16 @@ const io = require('socket.io').listen(server)
 
 io.on('connection', (socket) => {
     socket.on('message', (data) => {
-        controller(io, data);
+        messageCtr(io, data);
+    });
+    socket.on('requireReload', (data) => {
+        reloadCtr(io, data);
     });
     socket.on('info', (data) => {
         socket.join(data.roomId);
+    })
+    socket.on('leave', (data) => {
+        socket.leave(data.roomId);
     })
     socket.on('disconnect', () => {
     });

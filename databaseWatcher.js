@@ -105,13 +105,15 @@ exports.watchDatabase = async () => {
 
             const collectionEndedCasesQuery = `SELECT * from cases WHERE collectionStatus = '募集終了' and companyId = ${id}`;
             const collectionEndedCases = await executeQuery(collectionEndedCasesQuery);
-            collectionEndedCases.forEach(async (element) => {
-                const updateQuery2 = `UPDATE cases SET collectionStatus = '完了'
-                  WHERE id = ${element.id} and collectionStatus = '募集終了' and (SELECT COUNT(*) FROM apply WHERE caseId = ${element.id} and (status = '承認' OR status = '完了報告')) = 0
-                  and (SELECT COUNT(*) FROM apply WHERE caseId = ${element.id} and status = '申請中') = 0
-                  `;
-                const test = await executeQuery(updateQuery2);
-            });
+            await Promise.all(
+                collectionEndedCases.map((async (element) => {
+                    const updateQuery2 = `UPDATE cases SET collectionStatus = '完了'
+                    WHERE id = ${element.id} and collectionStatus = '募集終了' and (SELECT COUNT(*) FROM apply WHERE caseId = ${element.id} and (status = '承認' OR status = '完了報告')) = 0
+                    and (SELECT COUNT(*) FROM apply WHERE caseId = ${element.id} and status = '申請中') = 0
+                    `;
+                    const test = await executeQuery(updateQuery2);
+                }))
+            )
             const autoStartedCnt = company.freeAccount
                 ? count[0].cnt
                 : Math.min(possibleAutoCollectionCnt, count[0].cnt);

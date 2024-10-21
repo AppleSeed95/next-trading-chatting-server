@@ -9,20 +9,20 @@ exports.messageCtr = (io, data) => {
     const time = `${today.getHours()}:${today.getMinutes()}`
     const options = {
         method: 'POST',
-        uri: config.main_url, // Replace with the target server's URL
+        uri: config.main_url,
         body: {
             roomId, userId, msg, day, time
         },
-        json: true, // Set to true if you want to send JSON data in the request body
+        json: true,
     };
     request(options)
         .then((response) => {
-            io.to(data.roomId).emit('message'); // Broadcast the message to all connected clients
+            io.to(data.roomId).emit('message');
         })
         .catch((error) => {
-            io.to(data.roomId).emit('message'); // Broadcast the message to all connected clients
+            io.to(data.roomId).emit('message');
         });
 }
 exports.reloadCtr = (io, data) => {
-    io.to(data.roomId).emit('requireReload', { data }); // Broadcast the message to all connected clients
+    io.to(data.roomId).emit('requireReload', { data });
 }

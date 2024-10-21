@@ -1,4 +1,7 @@
 const { connection, executeQuery } = require('./connection');
+const config = require('./config')
+const request = require("request-promise");
+
 
 connection.connect(async (error) => {
     if (error) {
@@ -13,7 +16,7 @@ exports.watchDatabase = async () => {
     const companyQuery = 'SELECT * FROM company';
     const companies = await executeQuery(companyQuery);
     await Promise.all(
-        companies.map(async ({ id }) => {
+        companies.map(async ({ id, responsibleName, emailAddress }) => {
 
             const queryForCompany = `SELECT * FROM company WHERE id = '${id}'`;
             const result = await executeQuery(queryForCompany).catch((e) => {
@@ -39,7 +42,7 @@ exports.watchDatabase = async () => {
             }
 
             const countQuery = `
-              SELECT COUNT(*) AS cnt
+              SELECT caseName,id
               FROM cases
               WHERE companyId = ${id}
               AND status = '承認'
@@ -75,8 +78,29 @@ exports.watchDatabase = async () => {
             await executeQuery(updateQuery).catch((e) => {
                 throw new Error("something went wrong");
             });
+            await Promise.all(
+                count.map(async (aCase) => {
+                    const options = {
+                        method: 'POST',
+                        uri: config.mail_url,
+                        body: {
+                            to: emailAddress,
+                            subject: "【インフルエンサーめぐり】案件の募集を開始しました",
+                            html: `<div>${responsibleName} 様<br/>
+                            <br/>いつもインフルエンサーめぐりをご利用いただきありがとうございます。
+                            <br/>案件「 ${aCase?.caseName} 」の募集を開始しましたのでログインしてご確認ください。<br/>
+                            <br/>-----------------------------------------------------
+                            <br/>不明点がございましたらお問い合わせフォームよりご連絡ください。
+                            </div> https://influencer-meguri.jp/ask
+                            `,
+                        },
+                        json: true,
+                    };
+                    await request(options)
+                })
+            )
             const countQuery1 = `
-            SELECT COUNT(*) AS cnt
+            SELECT caseName,id
             FROM cases
             WHERE companyId = ${id}
               AND collectionStatus = '募集中'
@@ -87,8 +111,8 @@ exports.watchDatabase = async () => {
             const count1 = await executeQuery(countQuery1).catch((e) => {
                 throw new Error("something went wrong");
             });
-            if (count1[0].cnt > 0) {
-                console.log(`${count1[0].cnt} cases of company ${company.companyName} are available to end`);
+            if (count1.length > 0) {
+                console.log(`${count1.length} cases of company ${company.companyName} are available to end`);
             }
             const updateQuery1 = `UPDATE cases
               SET collectionStatus = '募集終了'
@@ -102,6 +126,27 @@ exports.watchDatabase = async () => {
             await executeQuery(updateQuery1).catch((e) => {
                 throw new Error("something went wrong");
             });
+            await Promise.all(
+                count1.map(async (aCase) => {
+                    const options = {
+                        method: 'POST',
+                        uri: config.mail_url,
+                        body: {
+                            to: emailAddress,
+                            subject: "【インフルエンサーめぐり】案件の募集を終了しました",
+                            html: `<div>${emailAddress} 様<br/>
+                            <br/>いつもインフルエンサーめぐりをご利用いただきありがとうございます。
+                            <br/>案件「 ${aCase?.caseName} 」の募集を終了しましたのでログインしてご確認ください。<br/>
+                            <br/>-----------------------------------------------------
+                            <br/>不明点がございましたらお問い合わせフォームよりご連絡ください。
+                            </div> https://influencer-meguri.jp/ask
+                            `,
+                        },
+                        json: true,
+                    };
+                    await request(options)
+                })
+            )
 
             const collectionEndedCasesQuery = `SELECT * from cases WHERE collectionStatus = '募集終了' and companyId = ${id}`;
             const collectionEndedCases = await executeQuery(collectionEndedCasesQuery);
@@ -115,9 +160,9 @@ exports.watchDatabase = async () => {
                 }))
             )
             const autoStartedCnt = company.freeAccount
-                ? count[0].cnt
-                : Math.min(possibleAutoCollectionCnt, count[0].cnt);
-            const autoEndedCnt = count1[0].cnt;
+                ? count.length
+                : Math.min(possibleAutoCollectionCnt, count.length);
+            const autoEndedCnt = count1.length;
             let concurrentDiffuse = autoStartedCnt - autoEndedCnt;
             const updateCompanyQuery = `
             UPDATE company

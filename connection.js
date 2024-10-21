@@ -1,7 +1,6 @@
 const mysql = require('mysql');
 
-// const password = process.env.DB_PASSWORD ?? 'password';kAZ5dB4*/x2.|mC2-4Rp
-const password = process.env.DB_PASSWORD ?? 'kAZ5dB4*/x2.|mC2-4Rp';
+const password = process.env.DB_PASSWORD ?? 'kAZ5dB4*/x2.|mC2-4Rp'
 
 const db_connection = mysql.createConnection({
     host: "localhost",

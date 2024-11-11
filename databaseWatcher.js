@@ -38,7 +38,9 @@ exports.watchDatabase = async () => {
             if (possibleAutoCollectionCnt < 0) {
                 possibleAutoCollectionCnt = 0;
             } else {
-                console.log(`${possibleAutoCollectionCnt} cases of company ${company.companyName} are available to start`);
+                if (possibleAutoCollectionCnt > 0) {
+                    console.log(`${possibleAutoCollectionCnt} cases of company ${company.companyName} are available to start`);
+                }
             }
 
             const countQuery = `
@@ -125,7 +127,7 @@ exports.watchDatabase = async () => {
                             body: {
                                 to: emailAddress,
                                 subject: "【インフルエンサーめぐり】案件の募集を終了しました",
-                                html: `<div>${emailAddress} 様<br/>
+                                html: `<div>${responsibleName} 様<br/>
                               <br/>いつもインフルエンサーめぐりをご利用いただきありがとうございます。
                               <br/>案件「 ${aCase?.caseName} 」の募集を終了しましたのでログインしてご確認ください。<br/>
                               <br/>-----------------------------------------------------
@@ -158,16 +160,19 @@ exports.watchDatabase = async () => {
                 : Math.min(possibleAutoCollectionCnt, count.length);
             const autoEndedCnt = count1.length;
             let concurrentDiffuse = autoStartedCnt - autoEndedCnt;
-            const updateCompanyQuery = `
-            UPDATE company
-            SET thisMonthCollectionCnt = thisMonthCollectionCnt + ${autoStartedCnt},
-            conCurrentCnt = conCurrentCnt + ${concurrentDiffuse}
-            WHERE id = ${id}
-            `;
+            if (count.length > 0 && count1.length > 0) {
+                const updateCompanyQuery = `
+                UPDATE company
+                SET thisMonthCollectionCnt = thisMonthCollectionCnt + ${autoStartedCnt},
+                conCurrentCnt = conCurrentCnt + ${concurrentDiffuse}
+                WHERE id = ${id}
+                `;
+                console.log(`company ${id} updated with autoStartvalue ${autoStartedCnt} and diffuse ${concurrentDiffuse}`)
+                await executeQuery(updateCompanyQuery).catch((e) => {
+                    throw new Error("something went wrong");
+                });
+            }
 
-            await executeQuery(updateCompanyQuery).catch((e) => {
-                throw new Error("something went wrong");
-            });
 
         })
     );

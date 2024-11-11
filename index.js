@@ -32,9 +32,9 @@ io.on('connection', (socket) => {
 });
 
 // Your other API routes and middleware can be defined here
-// setInterval(() => {
-//     watchDatabase();
-// }, 3000);
+setInterval(() => {
+    watchDatabase();
+}, 3000);
 const port = process.env.PORT || 5000;
 
 server.listen(port, () => {
